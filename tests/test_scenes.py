@@ -68,20 +68,25 @@ class TestTiming(unittest.TestCase):
 
 
 class TestColours(unittest.TestCase):
-    def test_alternates_from_green(self):
+    def test_alternates_from_a(self):
         cards = build_scenes([seg(0, 8, "a b c d e f")], max_words=1,
-                             min_scene=0.5, start_color="green")
-        self.assertEqual([c.kind for c in cards], ["green", "cream"] * 3)
+                             min_scene=0.5, start_color="a")
+        self.assertEqual([c.kind for c in cards], ["a", "b"] * 3)
 
-    def test_alternates_from_cream(self):
+    def test_alternates_from_b(self):
+        cards = build_scenes([seg(0, 4, "a b")], max_words=1,
+                             min_scene=0.5, start_color="b")
+        self.assertEqual([c.kind for c in cards], ["b", "a"])
+
+    def test_legacy_colour_names_still_work(self):
         cards = build_scenes([seg(0, 4, "a b")], max_words=1,
                              min_scene=0.5, start_color="cream")
-        self.assertEqual([c.kind for c in cards], ["cream", "green"])
+        self.assertEqual([c.kind for c in cards], ["b", "a"])
 
 
 class TestHelpers(unittest.TestCase):
     def test_describe(self):
-        scene = Scene(text="hi", start=0.0, end=1.0, kind="green")
+        scene = Scene(text="hi", start=0.0, end=1.0, kind="a")
         self.assertIn("hi", describe([scene]))
 
 

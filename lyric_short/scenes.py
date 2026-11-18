@@ -28,7 +28,7 @@ class Scene:
     start: float
     end: float
     words: List[Word] = field(default_factory=list)
-    kind: str = "green"
+    kind: str = "a"
 
     @property
     def duration(self) -> float:
@@ -73,7 +73,7 @@ def _chunk(words: Sequence[Word], max_words: int, max_chars: int) -> List[List[W
 
 def build_scenes(segments: Iterable[dict], max_words: int = 4, max_chars: int = 26,
                  min_scene: float = 1.5, max_scene: float = 4.0,
-                 start_color: str = "green", offset: float = 0.0,
+                 start_color: str = "a", offset: float = 0.0,
                  total_duration: Optional[float] = None) -> List[Scene]:
     scenes: List[Scene] = []
 
@@ -94,9 +94,24 @@ def build_scenes(segments: Iterable[dict], max_words: int = 4, max_chars: int = 
     scenes.sort(key=lambda s: s.start)
     scenes = _fit_durations(scenes, min_scene, max_scene, total_duration)
 
+    first = _kind(start_color)
     for i, scene in enumerate(scenes):
-        scene.kind = start_color if i % 2 == 0 else ("cream" if start_color == "green" else "green")
+        scene.kind = first if i % 2 == 0 else _other(first)
     return scenes
+
+
+def _kind(name: str) -> str:
+    """Accept 'a'/'b' and the older 'green'/'cream' names."""
+    name = (name or "a").lower()
+    if name in ("a", "green", "first"):
+        return "a"
+    if name in ("b", "cream", "second"):
+        return "b"
+    raise SystemExit(f"start_color must be a/b (or green/cream), got {name!r}")
+
+
+def _other(kind: str) -> str:
+    return "b" if kind == "a" else "a"
 
 
 def _fit_durations(scenes: List[Scene], min_scene: float, max_scene: float,

@@ -1,27 +1,36 @@
-"""Command line entry point: audio in, 9:16 lyric short out."""
+"""Command line entry point: audio in, lyric short out."""
 from __future__ import annotations
 
 import argparse
 import os
 import sys
 import tempfile
+import zlib
 
-from . import art, media, scenes as scenes_mod, transcribe as asr
-from .config import PRESETS, get_preset
+from . import art, media, scenes as scenes_mod, styles, transcribe as asr
+from .config import CANVAS_PRESETS, apply_canvas
 from .render import Renderer
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="lyric-short",
-        description="Turn an audio file into a 9:16 lyric short (YouTube Shorts / Reels).",
+        description="Turn an audio file into a lyric short (YouTube Shorts / Reels / TikTok).",
+        epilog="Styles: " + ", ".join(styles.STYLE_NAMES) + ", auto",
     )
-    p.add_argument("--audio", required=True, help="input audio or video file")
+    p.add_argument("--audio", default=None, help="input audio or video file")
     p.add_argument("--out", default="short.mp4", help="output mp4 (default: short.mp4)")
-    p.add_argument("--preset", default="shorts", choices=sorted(PRESETS),
-                   help="canvas preset (default: shorts = 1080x1920)")
+    p.add_argument("--style", default="botanical",
+                   help="look: " + " | ".join(styles.STYLE_NAMES) + " | auto")
+    p.add_argument("--list-styles", action="store_true", help="print the styles and exit")
+    p.add_argument("--preset", default="shorts", choices=sorted(CANVAS_PRESETS),
+                   help="canvas: shorts (1080x1920), landscape, square")
     p.add_argument("--fps", type=int, default=None, help="override frame rate")
     p.add_argument("--font", default=None, help="path to a .ttf/.otf serif font")
+    p.add_argument("--vary", action="store_true",
+                   help="nudge the palette a little so runs do not look identical")
+    p.add_argument("--seed", default=None,
+                   help="seed for style/grain/variation (default: derived from the file name)")
 
     g = p.add_argument_group("transcription")
     g.add_argument("--transcript", default=None,
@@ -41,8 +50,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--max-chars", type=int, default=26, help="characters per card (default: 26)")
     s.add_argument("--min-scene", type=float, default=None, help="seconds a card stays up at least")
     s.add_argument("--max-scene", type=float, default=None, help="seconds a card stays up at most")
-    s.add_argument("--start-color", default=None, choices=["green", "cream"],
-                   help="colour of the first card")
+    s.add_argument("--start-color", default=None, choices=["a", "b", "green", "cream"],
+                   help="which palette the first card uses")
     s.add_argument("--handle", default=None, help="watermark text, e.g. @yourname")
     s.add_argument("--limit", type=float, default=None,
                    help="only use the first N seconds of the audio")
@@ -54,25 +63,34 @@ def build_parser() -> argparse.ArgumentParser:
                             "medium", "slow"],
                    help="encoder speed vs file size (default: medium)")
     o.add_argument("--dry-run", action="store_true", help="print the card plan and stop")
-    o.add_argument("--seed", type=int, default=7, help="background noise seed")
     return p
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
 
+    if args.list_styles:
+        for name in styles.STYLE_NAMES:
+            print(f"{name:<10} {styles.describe(styles.get_style(name))}")
+        print(f"{'auto':<10} pick one of the above from the audio name")
+        return 0
+
+    if not args.audio:
+        raise SystemExit("--audio is required (try --list-styles to see the looks)")
     if not os.path.exists(args.audio):
         raise SystemExit(f"audio not found: {args.audio}")
 
-    theme = get_preset(args.preset)
+    seed = args.seed or os.path.basename(args.audio)
+    theme = styles.auto_style(seed) if args.style in ("auto", "random") else styles.get_style(args.style)
+    if args.vary:
+        theme = styles.vary(theme, seed=seed)
+    theme = apply_canvas(theme, args.preset)
     if args.fps:
         theme.fps = args.fps
     if args.min_scene:
         theme.min_scene = args.min_scene
     if args.max_scene:
         theme.max_scene = args.max_scene
-    if args.start_color:
-        theme.start_color = args.start_color
     if args.handle:
         theme.handle = args.handle
 
@@ -99,7 +117,7 @@ def main(argv=None) -> int:
         max_chars=args.max_chars,
         min_scene=theme.min_scene,
         max_scene=theme.max_scene,
-        start_color=theme.start_color,
+        start_color=args.start_color or "a",
         offset=theme.intro,
         total_duration=theme.intro + usable,
     )
@@ -111,14 +129,15 @@ def main(argv=None) -> int:
     if not cards:
         raise SystemExit("no speech found in the audio — nothing to draw")
 
+    print(f"[style] {theme.name} ({theme.bg_mode} bg, {theme.card_mode} card, "
+          f"{theme.ornament} ornament, {theme.transition} transition)")
     print(f"[scenes] {len(cards)} cards:\n" + scenes_mod.describe(cards))
     if args.dry_run:
         return 0
 
     duration = theme.intro + usable + theme.outro
-    renderer = Renderer(cards, theme, font_path=args.font, duration=duration, seed=args.seed)
-    renderer.render(args.out, audio_path=args.audio, crf=args.crf,
-                    preset=args.x264_preset)
+    renderer = Renderer(cards, theme, font_path=args.font, duration=duration, seed=zlib.crc32(seed.encode()) % 9999)
+    renderer.render(args.out, audio_path=args.audio, crf=args.crf, preset=args.x264_preset)
     print(f"[done] {args.out}  ({os.path.getsize(args.out) / 1e6:.1f} MB)")
     return 0
 
