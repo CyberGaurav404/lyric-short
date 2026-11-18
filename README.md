@@ -25,7 +25,7 @@ audio.mp3 ──► ffmpeg ──► Whisper (word timestamps) ──► scene p
 ## Install
 
 ```bash
-git clone https://github.com/<you>/lyric-short.git
+git clone https://github.com/CyberGaurav404/lyric-short.git
 cd lyric-short
 
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
