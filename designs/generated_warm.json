@@ -1,0 +1,73 @@
+{
+  "name": "warm-384f",
+  "mood": "warm",
+  "palettes": [
+    {
+      "fill": [
+        136,
+        67,
+        52
+      ],
+      "text": [
+        250,
+        248,
+        240
+      ],
+      "orn": [
+        154,
+        211,
+        243
+      ]
+    },
+    {
+      "fill": [
+        222,
+        163,
+        129
+      ],
+      "text": [
+        26,
+        30,
+        28
+      ],
+      "orn": [
+        154,
+        211,
+        243
+      ]
+    }
+  ],
+  "bg_mode": "gradient",
+  "bg_color": [
+    22,
+    11,
+    9
+  ],
+  "glow_color": [
+    75,
+    31,
+    21
+  ],
+  "card_mode": "frame",
+  "card_ratio": 0.868,
+  "card_aspect": 1.376,
+  "card_center_y": 0.445,
+  "corner": 0.01,
+  "ornament": "none",
+  "text_align": "left",
+  "accent_rule": true,
+  "font_weight": 400,
+  "text_size": 0.101,
+  "transition": "slide",
+  "zoom": 0.025,
+  "rise": 14,
+  "grain": 0.074,
+  "glow": 0.0,
+  "shadow": true,
+  "handle_color": [
+    212,
+    189,
+    184
+  ],
+  "notes": "generated for seed 'demo_audio.mp3'"
+}

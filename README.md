@@ -3,26 +3,67 @@
 Audio in → 9:16 lyric video out. Built for YouTube Shorts, Reels and TikTok.
 
 Give it a song, a voice note or any audio file. It transcribes the words with
-Whisper, cuts the transcript into short lyric cards, picks a look, and renders a
-vertical video in which every word appears in sync with the voice.
+Whisper, cuts the transcript into short lyric cards, **designs a look for that
+particular audio**, and renders a vertical video where every word appears in sync
+with the voice.
 
-It is also a **skill for an AI agent** — see [SKILL.md](SKILL.md) for the
-instructions an agent follows to drive it end to end.
+The look is not a fixed template. You (or your agent) compose a design per video
+from primitives — palette, background, card treatment, type, motion — so two
+videos never come out the same. The six styles that ship with the repo are
+reference points, and `designs/` holds hand-written examples.
 
 ```
-audio.mp3 ──► ffmpeg ──► Whisper (word timestamps) ──► scene planner ──► renderer ──► short.mp4
+audio.mp3 ──► ffmpeg ──► Whisper (word timestamps) ──► scene planner ──► design ──► renderer ──► short.mp4
 ```
 
 ![preview](assets/preview.jpg)
 
-## Six looks, one command
+## Design, don't template
+
+![designs](assets/designs.jpg)
+
+Every frame above is the same lyric line, same code, different design: six moods
+from the generator (`--design auto --mood …`) and three hand-written specs from
+`designs/`.
+
+```bash
+# invent a design for this audio, and keep it so the look is repeatable
+python -m lyric_short --audio song.mp3 --out short.mp4 \
+       --design auto --mood warm --save-design designs/song.json
+
+# or render a design you wrote yourself
+python -m lyric_short --audio song.mp3 --out short.mp4 --design designs/ink_and_sun.json
+```
+
+A design is a small JSON file:
+
+```json
+{
+  "name": "monsoon_note",
+  "palettes": [
+    {"fill": [38, 54, 62], "text": [238, 244, 240], "orn": [150, 180, 170]},
+    {"fill": [238, 244, 240], "text": [38, 54, 62], "orn": [38, 54, 62]}
+  ],
+  "bg_mode": "bokeh", "bg_color": [6, 12, 14], "glow_color": [18, 34, 38],
+  "card_mode": "rounded", "card_ratio": 0.90, "card_aspect": 1.32,
+  "card_center_y": 0.46, "corner": 0.03,
+  "ornament": "none", "text_align": "left", "accent_rule": true,
+  "font_weight": 500, "text_size": 0.10,
+  "transition": "fade", "zoom": 0.02, "grain": 0.03, "glow": 0.0
+}
+```
+
+Full field list, taste rules and the agent workflow live in [SKILL.md](SKILL.md).
+`python scripts/preview_designs.py` renders every mood plus every file in
+`designs/` in a few seconds.
+
+## Ready-made styles (shortcuts, not the point)
 
 ![styles](assets/styles.jpg)
 
 `botanical` · `midnight` · `sunset` · `paper` · `poster` · `neon` — plus `auto`,
-which picks one from a hash of the file name so the same song keeps its look and
-the next song gets a different one. `--vary` shifts the palette a little so two
-videos in the same style never look identical.
+which picks one from a hash of the file name, and `--vary`, which shifts the
+palette so two runs differ.
 
 | style | mood | card | motion |
 | --- | --- | --- | --- |
@@ -54,25 +95,12 @@ tool finds it automatically.
 python -m lyric_short --audio song.mp3 --out short.mp4 --handle "@yourname"
 ```
 
-More:
-
-```bash
-# let the tool choose the look, with a palette variation
-python -m lyric_short --audio song.mp3 --out short.mp4 --style auto --vary
-
-# a specific look, Hindi lyrics, first 45 seconds only
-python -m lyric_short --audio song.mp3 --out short.mp4 --style sunset --language hi --limit 45
-
-# see the card plan without rendering
-python -m lyric_short --audio song.mp3 --transcript t.json --dry-run
-
-# restyle the same transcript (no model reload, no second ASR pass)
-python -m lyric_short --audio song.mp3 --out v2.mp4 --transcript t.json --style neon
-```
-
 | flag | what it does |
 | --- | --- |
-| `--style botanical\|midnight\|sunset\|paper\|poster\|neon\|auto` | the look |
+| `--design auto` \| `path.json` | invent a design, or render one you wrote |
+| `--mood calm\|warm\|dark\|bold\|minimal\|playful` | bias for `--design auto` |
+| `--save-design d.json` | keep the design so you can re-render the same look |
+| `--style …` | fallback look when no `--design` is given |
 | `--vary` | nudge the palette so runs differ |
 | `--preset shorts\|landscape\|square` | canvas shape (default `shorts` = 1080×1920) |
 | `--model tiny\|base\|small\|medium\|large-v3` | Whisper model (default `small`) |
@@ -84,22 +112,21 @@ python -m lyric_short --audio song.mp3 --out v2.mp4 --transcript t.json --style 
 | `--limit 45` | only use the first 45 seconds |
 | `--transcript t.json` / `--save-transcript t.json` | reuse / keep the Whisper output |
 | `--dry-run` | print the card plan, render nothing |
-| `--crf 20` | quality vs size, lower is better |
-| `--x264-preset veryfast` | encode faster with a slightly bigger file |
-| `--list-styles` | print the six looks and their settings |
+| `--crf 20`, `--x264-preset veryfast` | quality vs size vs speed |
+| `--list-styles` | print the six styles and their settings |
 
 Typical run:
 
 ```
-$ python -m lyric_short --audio song.mp3 --out short.mp4 --language hi --style auto
+$ python -m lyric_short --audio song.mp3 --out short.mp4 --language hi --design auto --mood warm
 [whisper] loading faster-whisper model 'small' (auto, int8)
 [whisper] language=hi (p=0.98)
-[style] sunset (gradient bg, rounded card, none ornament, slide transition)
+[design] warm-384f [warm] bg=gradient card=frame orn=none align=left trans=slide a=(137, 214, 205) b=(232, 239, 246) grain=0.074 glow=0.0
 [scenes] 24 cards:
 01    1.50–  3.10  a      kahani meri
 02    3.12–  5.40  b      adhoori si
 ...
-[render] sunset · 1080x1920 @ 30fps · 52.30s · 24 cards -> short.mp4
+[render] warm-384f · 1080x1920 @ 30fps · 52.30s · 24 cards -> short.mp4
 [done] short.mp4  (6.4 MB)
 ```
 
@@ -120,54 +147,30 @@ the text lands on the beat instead of drifting.
 
 ## Use it as an agent skill
 
-[SKILL.md](SKILL.md) is written for an AI agent: when to reach for the tool, how
-to pick a style from the mood of the audio, the exact commands, a verification
-checklist, and what to do when the transcript comes back wrong. Drop the folder
-into an agent's skills directory, or point the agent at `SKILL.md`.
+[SKILL.md](SKILL.md) is written for an AI agent: how to read the material, how to
+design a scene for it, the field-by-field design vocabulary, taste rules, a
+verification checklist, and what to do when the transcript comes back wrong. Drop
+the folder into an agent's skills directory, or point the agent at `SKILL.md`.
 
 ## Layout of the repo
 
 ```
-SKILL.md         agent-facing instructions (when/how to run this)
+SKILL.md         agent-facing instructions (design the scene, then render)
 lyric_short/
   cli.py         argument parsing and the pipeline
   media.py       ffmpeg: probe, extract, encode, mux
   transcribe.py  faster-whisper / openai-whisper backends, transcript io
   scenes.py      transcript -> cards
+  design.py      DesignSpec, generator (moods), contrast checks, json io
   render.py      frame loop, transitions, word reveals, grain
   art.py         backgrounds, cards, ornaments, text layout, heart
   config.py      Theme + Palette dataclasses, canvas presets
-  styles.py      the six looks, auto-style and palette variation
-tests/           unittest suite for the scene planner and styles
+  styles.py      six reference styles, auto-style and palette variation
+designs/         hand-written design specs
+tests/           39 unittest cases (scenes, styles, design)
 examples/        demo audio, demo transcript, rendered demos
-scripts/         font download, demo audio generator, style previews
+scripts/         font download, demo audio, style and design previews
 ```
-
-## Make it yours
-
-Everything visual is a `Theme` in `lyric_short/styles.py`:
-
-```python
-from lyric_short.config import Palette, Theme
-
-def ocean() -> Theme:
-    return Theme(
-        name="ocean",
-        palettes=[Palette((12, 48, 72), (238, 248, 255), (120, 200, 220)),
-                  Palette((238, 248, 255), (12, 48, 72), (12, 48, 72))],
-        bg_color=(3, 10, 18), glow_color=(10, 40, 70), bg_mode="stars",
-        ornament="arcs", card_mode="rounded", transition="slide", grain=0.05,
-    )
-```
-
-Register it in `BUILDERS` and it is available as `--style ocean`. Then:
-
-```bash
-python scripts/preview_styles.py     # one frame per style, in a few seconds
-```
-
-A different font is a `--font path/to/Serif.ttf` away (variable fonts get their
-weight axis set automatically).
 
 ## Speed and memory
 

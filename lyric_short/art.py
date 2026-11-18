@@ -239,7 +239,7 @@ def build_card(theme: Theme, kind: str) -> Tuple[Image.Image, RGB]:
                             width=max(1, int(1.6 * s)))
         img = img.filter(ImageFilter.GaussianBlur(0.4))
     elif theme.card_mode == "rounded":
-        radius = int(h * 0.035)
+        radius = max(1, int(h * theme.corner))
         mask = Image.new("L", (w, h), 0)
         ImageDraw.Draw(mask).rounded_rectangle([0, 0, w - 1, h - 1], radius=radius, fill=255)
         img.putalpha(mask)
@@ -247,6 +247,13 @@ def build_card(theme: Theme, kind: str) -> Tuple[Image.Image, RGB]:
             d.rounded_rectangle([int(1.5 * s), int(1.5 * s), w - int(1.5 * s), h - int(1.5 * s)],
                                 radius=radius, outline=orn_color + (theme.border_alpha,),
                                 width=max(1, int(1.4 * s)))
+
+    if theme.accent_rule:
+        rw = w * 0.14
+        rx = w * 0.10 if theme.text_align == "left" else w / 2 - rw / 2
+        ry = h * 0.62
+        d.rounded_rectangle([rx, ry, rx + rw, ry + max(2, h * 0.005)],
+                            radius=max(1, int(h * 0.003)), fill=orn_color + (190,))
     return img, text_color
 
 
@@ -282,7 +289,9 @@ def build_text_layers(text: str, color: RGB, card_w: int, card_h: int,
     s = theme.supersample
     cw, ch = card_w * s, card_h * s
     max_width = cw * theme.max_text_width
-    size = int(ch * theme.text_size)
+    # start big and shrink: a short line should fill the card, a long one
+    # should stay readable, and both should fit the same safe area
+    size = int(ch * theme.text_size * 1.45)
     probe = ImageDraw.Draw(Image.new("RGB", (8, 8)))
 
     def wrap(font) -> List[str]:
@@ -313,11 +322,14 @@ def build_text_layers(text: str, color: RGB, card_w: int, card_h: int,
 
     layers: List[WordLayer] = []
     block_h = line_h * len(lines)
-    y0 = ch / 2 - block_h / 2
+    y0 = ch * (0.44 if theme.accent_rule else 0.5) - block_h / 2
     for li, line in enumerate(lines):
         widths = [probe.textbbox((0, 0), wd, font=font)[2] for wd in line.split()]
         total = sum(widths) + space * (len(widths) - 1)
-        x = cw / 2 - total / 2
+        if theme.text_align == "left":
+            x = cw * 0.10
+        else:
+            x = cw / 2 - total / 2
         for word, wd in zip(line.split(), widths):
             pad = int(theme.glow * s) + int(size * 0.2)
             tw, th = int(wd + 2 * pad), int(asc + desc + 2 * pad)

@@ -41,6 +41,7 @@ class Theme:
     card_center_y: float = 0.47       # 0 = top, 1 = bottom
     max_text_width: float = 0.80      # fraction of card width used by text
     card_mode: str = "frame"          # frame | rounded | fullbleed
+    corner: float = 0.035             # corner radius as a fraction of card height
 
     # palette + background
     palettes: List[Palette] = field(default_factory=lambda: list(DEFAULT_PALETTES))
@@ -48,6 +49,8 @@ class Theme:
     glow_color: RGB = (16, 30, 25)
     bg_mode: str = "bokeh"            # bokeh | stars | gradient | paper
     ornament: str = "botanical"       # botanical | arcs | lines | none
+    text_align: str = "center"        # center | left
+    accent_rule: bool = False         # short rule under the lyric block
     ornament_alpha: int = 215
     border_alpha: int = 110
     shadow: bool = True

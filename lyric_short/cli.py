@@ -7,7 +7,7 @@ import sys
 import tempfile
 import zlib
 
-from . import art, media, scenes as scenes_mod, styles, transcribe as asr
+from . import art, design as design_mod, media, scenes as scenes_mod, styles, transcribe as asr
 from .config import CANVAS_PRESETS, apply_canvas
 from .render import Renderer
 
@@ -20,8 +20,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--audio", default=None, help="input audio or video file")
     p.add_argument("--out", default="short.mp4", help="output mp4 (default: short.mp4)")
+    p.add_argument("--design", default=None,
+                   help="render a design: a JSON file, or 'auto' to invent one")
+    p.add_argument("--mood", default=None,
+                   help="bias for --design auto: " + " | ".join(design_mod.MOODS))
+    p.add_argument("--save-design", default=None,
+                   help="write the design used to this JSON file (reuse it later)")
     p.add_argument("--style", default="botanical",
-                   help="look: " + " | ".join(styles.STYLE_NAMES) + " | auto")
+                   help="fallback look when no --design is given: "
+                        + " | ".join(styles.STYLE_NAMES) + " | auto")
     p.add_argument("--list-styles", action="store_true", help="print the styles and exit")
     p.add_argument("--preset", default="shorts", choices=sorted(CANVAS_PRESETS),
                    help="canvas: shorts (1080x1920), landscape, square")
@@ -81,10 +88,20 @@ def main(argv=None) -> int:
         raise SystemExit(f"audio not found: {args.audio}")
 
     seed = args.seed or os.path.basename(args.audio)
-    theme = styles.auto_style(seed) if args.style in ("auto", "random") else styles.get_style(args.style)
-    if args.vary:
-        theme = styles.vary(theme, seed=seed)
-    theme = apply_canvas(theme, args.preset)
+
+    spec = None
+    if args.design:
+        if args.design in ("auto", "generate"):
+            spec = design_mod.generate(seed=seed, mood=args.mood, canvas=args.preset)
+        else:
+            spec = design_mod.load(args.design)
+        theme = spec.to_theme(args.preset)
+    else:
+        theme = (styles.auto_style(seed) if args.style in ("auto", "random")
+                 else styles.get_style(args.style))
+        if args.vary:
+            theme = styles.vary(theme, seed=seed)
+        theme = apply_canvas(theme, args.preset)
     if args.fps:
         theme.fps = args.fps
     if args.min_scene:
@@ -93,6 +110,9 @@ def main(argv=None) -> int:
         theme.max_scene = args.max_scene
     if args.handle:
         theme.handle = args.handle
+    if spec is not None and args.save_design:
+        design_mod.save(spec, args.save_design)
+        print(f"[design] saved to {args.save_design}")
 
     audio_duration = media.probe_duration(args.audio)
     usable = audio_duration if args.limit is None else min(audio_duration, args.limit)
@@ -129,8 +149,11 @@ def main(argv=None) -> int:
     if not cards:
         raise SystemExit("no speech found in the audio — nothing to draw")
 
-    print(f"[style] {theme.name} ({theme.bg_mode} bg, {theme.card_mode} card, "
-          f"{theme.ornament} ornament, {theme.transition} transition)")
+    if spec is not None:
+        print(f"[design] {design_mod.describe(spec)}")
+    else:
+        print(f"[style] {theme.name} ({theme.bg_mode} bg, {theme.card_mode} card, "
+              f"{theme.ornament} ornament, {theme.transition} transition)")
     print(f"[scenes] {len(cards)} cards:\n" + scenes_mod.describe(cards))
     if args.dry_run:
         return 0

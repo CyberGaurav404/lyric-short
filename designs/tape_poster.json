@@ -1,0 +1,73 @@
+{
+  "name": "tape_poster",
+  "mood": "bold",
+  "palettes": [
+    {
+      "fill": [
+        232,
+        78,
+        56
+      ],
+      "text": [
+        252,
+        246,
+        234
+      ],
+      "orn": [
+        252,
+        246,
+        234
+      ]
+    },
+    {
+      "fill": [
+        24,
+        24,
+        24
+      ],
+      "text": [
+        252,
+        246,
+        234
+      ],
+      "orn": [
+        232,
+        78,
+        56
+      ]
+    }
+  ],
+  "bg_mode": "gradient",
+  "bg_color": [
+    12,
+    12,
+    12
+  ],
+  "glow_color": [
+    22,
+    22,
+    22
+  ],
+  "card_mode": "fullbleed",
+  "card_ratio": 1.0,
+  "card_aspect": 1.0,
+  "card_center_y": 0.5,
+  "corner": 0.035,
+  "ornament": "lines",
+  "text_align": "center",
+  "accent_rule": true,
+  "font_weight": 700,
+  "text_size": 0.12,
+  "transition": "pop",
+  "zoom": 0.008,
+  "rise": 14,
+  "grain": 0.07,
+  "glow": 0.0,
+  "shadow": false,
+  "handle_color": [
+    252,
+    246,
+    234
+  ],
+  "notes": "full-bleed panels, huge type, quick cuts"
+}
