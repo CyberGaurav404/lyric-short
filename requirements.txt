@@ -1,0 +1,8 @@
+# core
+pillow>=10.0
+numpy>=1.24
+imageio-ffmpeg>=0.4.9      # bundled ffmpeg binary, used when ffmpeg is not on PATH
+
+# speech to text (pick one; faster-whisper is the default)
+faster-whisper>=1.0.0
+# openai-whisper>=20231117
