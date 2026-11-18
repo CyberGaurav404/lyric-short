@@ -1,0 +1,155 @@
+{
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 2.2,
+      "text": "hmm",
+      "words": [
+        {
+          "start": 0.0,
+          "end": 2.2,
+          "word": "hmm"
+        }
+      ]
+    },
+    {
+      "start": 2.4,
+      "end": 4.7,
+      "text": "Kahani meri",
+      "words": [
+        {
+          "start": 2.4,
+          "end": 3.55,
+          "word": "Kahani"
+        },
+        {
+          "start": 3.55,
+          "end": 4.7,
+          "word": "meri"
+        }
+      ]
+    },
+    {
+      "start": 4.8,
+      "end": 7.1,
+      "text": "Adhoori si",
+      "words": [
+        {
+          "start": 4.8,
+          "end": 5.95,
+          "word": "Adhoori"
+        },
+        {
+          "start": 5.95,
+          "end": 7.1,
+          "word": "si"
+        }
+      ]
+    },
+    {
+      "start": 7.2,
+      "end": 9.5,
+      "text": "Reh jaaye",
+      "words": [
+        {
+          "start": 7.2,
+          "end": 8.35,
+          "word": "Reh"
+        },
+        {
+          "start": 8.35,
+          "end": 9.5,
+          "word": "jaaye"
+        }
+      ]
+    },
+    {
+      "start": 9.6,
+      "end": 12.0,
+      "text": "Jo tu na milaa",
+      "words": [
+        {
+          "start": 9.6,
+          "end": 10.2,
+          "word": "Jo"
+        },
+        {
+          "start": 10.2,
+          "end": 10.8,
+          "word": "tu"
+        },
+        {
+          "start": 10.8,
+          "end": 11.4,
+          "word": "na"
+        },
+        {
+          "start": 11.4,
+          "end": 12.0,
+          "word": "milaa"
+        }
+      ]
+    },
+    {
+      "start": 12.1,
+      "end": 14.3,
+      "text": "Kuch ansuni",
+      "words": [
+        {
+          "start": 12.1,
+          "end": 13.2,
+          "word": "Kuch"
+        },
+        {
+          "start": 13.2,
+          "end": 14.3,
+          "word": "ansuni"
+        }
+      ]
+    },
+    {
+      "start": 14.4,
+      "end": 16.7,
+      "text": "Phir bhi kahun",
+      "words": [
+        {
+          "start": 14.4,
+          "end": 15.17,
+          "word": "Phir"
+        },
+        {
+          "start": 15.17,
+          "end": 15.93,
+          "word": "bhi"
+        },
+        {
+          "start": 15.93,
+          "end": 16.7,
+          "word": "kahun"
+        }
+      ]
+    },
+    {
+      "start": 16.8,
+      "end": 19.4,
+      "text": "Dil ki suni",
+      "words": [
+        {
+          "start": 16.8,
+          "end": 17.67,
+          "word": "Dil"
+        },
+        {
+          "start": 17.67,
+          "end": 18.53,
+          "word": "ki"
+        },
+        {
+          "start": 18.53,
+          "end": 19.4,
+          "word": "suni"
+        }
+      ]
+    }
+  ]
+}
